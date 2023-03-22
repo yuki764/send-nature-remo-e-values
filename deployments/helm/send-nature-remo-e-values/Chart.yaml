@@ -1,0 +1,9 @@
+apiVersion: v2
+name: send-nature-remo-e-values
+description: Send sensor values from Nature Remo E
+
+type: application
+
+version: 0.1.0
+
+appVersion: "0.1.0-beta.0"
