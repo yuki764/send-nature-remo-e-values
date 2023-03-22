@@ -71,8 +71,13 @@ func fetchEnergyValuesFromNatureAPI(applienceId string, token string, statsdClie
 
 	fmt.Printf("%#v\n", energy)
 
+	updatedAt, err := time.Parse(time.RFC3339, energy.Timestamp)
+	if err != nil {
+		panic(err)
+	}
+
 	if statsdClient != nil {
-		if err := statsdClient.Gauge("nature_remo.electric_energy.instantaneous", float64(energy.Instantaneous), []string{"home:Home"}, 1); err != nil {
+		if err := statsdClient.GaugeWithTimestamp("nature_remo.electric_energy.instantaneous", float64(energy.Instantaneous), []string{"home:Home"}, 1, updatedAt); err != nil {
 			panic(err)
 		}
 	}
