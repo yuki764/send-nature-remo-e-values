@@ -71,14 +71,24 @@ func fetchEnergyValuesFromNatureAPI(applienceId string, token string, statsdClie
 
 	fmt.Printf("%#v\n", energy)
 
-	updatedAt, err := time.Parse(time.RFC3339, energy.Timestamp)
-	if err != nil {
-		panic(err)
-	}
-
 	if statsdClient != nil {
-		if err := statsdClient.GaugeWithTimestamp("nature_remo.electric_energy.instantaneous", float64(energy.Instantaneous), []string{"home:Home"}, 1, updatedAt); err != nil {
-			panic(err)
-		}
+		go func() {
+			// send Instantaneous
+			instTs, err := time.Parse(time.RFC3339, energy.InstantaneousTimestamp)
+			if err != nil {
+				panic(err)
+			}
+			if err := statsdClient.GaugeWithTimestamp("nature_remo.electric_energy.instantaneous", float64(energy.InstantaneousValue), []string{"home:Home"}, 1, instTs); err != nil {
+				panic(err)
+			}
+			// send (Normal) Cumulative to Datadog
+			ncumTs, err := time.Parse(time.RFC3339, energy.NormalCumulativeTimestamp)
+			if err != nil {
+				panic(err)
+			}
+			if err := statsdClient.GaugeWithTimestamp("nature_remo.electric_energy.cumulative", float64(energy.NormalCumulativeValue), []string{"home:Home"}, 1, ncumTs); err != nil {
+				panic(err)
+			}
+		}()
 	}
 }

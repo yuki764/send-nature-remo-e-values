@@ -29,11 +29,13 @@ type Applience struct {
 	} `json:"smart_meter"`
 }
 type Energy struct {
-	Timestamp         string
-	Instantaneous     int
-	NormalCumulative  float64
-	ReverseCumulative float64
-	OverflowDiff      float64
+	InstantaneousValue         int
+	InstantaneousTimestamp     string
+	NormalCumulativeValue      float64
+	NormalCumulativeTimestamp  string
+	ReverseCumulativeValue     float64
+	ReverseCumulativeTimestamp string
+	OverflowDiff               float64
 }
 
 func ParseEnergy(a Applience) (Energy, error) {
@@ -49,19 +51,20 @@ func ParseEnergy(a Applience) (Energy, error) {
 	for _, p := range a.SmartMeter.EchonetliteProperties {
 		switch p.Epc {
 		case EpcMeasuredInstantaneous:
-			if e.Instantaneous, err = strconv.Atoi(p.Val); err != nil {
+			if e.InstantaneousValue, err = strconv.Atoi(p.Val); err != nil {
 				return e, fmt.Errorf("Error: failed to parse Measured Instantaneous (EPC: %d)", p.Epc)
 			}
-			// assume "updated_at" in instantaneous to be timestamp
-			e.Timestamp = p.UpdatedAt
+			e.InstantaneousTimestamp = p.UpdatedAt
 		case EpcNormalDirectionCumulativeElectricEnergy:
 			if normalCumulativeBase, err = strconv.Atoi(p.Val); err != nil {
 				return e, fmt.Errorf("Error: failed to parse Normal Direction Cumulative Electric Energy (EPC: %d)", p.Epc)
 			}
+			e.NormalCumulativeTimestamp = p.UpdatedAt
 		case EpcReverseDirectionCumulativeElectricEnergy:
 			if reverseCumulativeBase, err = strconv.Atoi(p.Val); err != nil {
 				return e, fmt.Errorf("Error: failed to parse Reverse Direction Cumulative Electric Energy (EPC: %d)", p.Epc)
 			}
+			e.ReverseCumulativeTimestamp = p.UpdatedAt
 		case EpcCumulativeElectricEnergyUnit:
 			switch p.Val {
 			case "0": // 0x00
@@ -96,8 +99,8 @@ func ParseEnergy(a Applience) (Energy, error) {
 		}
 	}
 
-	e.NormalCumulative = float64(normalCumulativeBase*coefficient) * unit
-	e.ReverseCumulative = float64(reverseCumulativeBase*coefficient) * unit
+	e.NormalCumulativeValue = float64(normalCumulativeBase*coefficient) * unit
+	e.ReverseCumulativeValue = float64(reverseCumulativeBase*coefficient) * unit
 	e.OverflowDiff = math.Pow10(effectiveDigits) * float64(coefficient) * unit
 
 	return e, nil
