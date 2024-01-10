@@ -1,13 +1,13 @@
 replicaCount: 1
 
 image:
-  repository: gcr.io/neigepluie/send-nature-remo-e-values
+  repository: asia-docker.pkg.dev/project/repo/send-nature-remo-e-values
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
-imagePullSecrets: 
-- name: "gcr-global"
+imagePullSecrets:
+  - name: "gcr-global"
 nameOverride: ""
 fullnameOverride: ""
 
